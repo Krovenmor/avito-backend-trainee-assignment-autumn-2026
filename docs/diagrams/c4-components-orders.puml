@@ -1,0 +1,45 @@
+@startuml c4-components-orders
+!include <C4/C4_Component>
+
+title C4 Level 3 — компоненты домена orders внутри kitchen
+
+Person(user, "Пользователь")
+System_Ext(place, "Заведение", "Вебхук партнёра")
+
+Container_Boundary(kitchen, "kitchen") {
+
+    Component(domain, "orders/domain", "Go", "Модели заказа, статусы и ошибки. Сам не зависит ни от чего; на него опираются все остальные компоненты домена, поэтому стрелки не рисуются")
+
+    Component(transport, "orders/transport/http", "Go", "Хендлеры /orders, /cancel, /rate, /stream, /tracking, /users/{id}/orders и B2B /delivered, /tracking. Валидация, коды ошибок, SSE")
+    Component(service, "orders/service", "Go", "Синхронная часть домена: создание с резервом остатка, отмена, delivered, история, подписка на события. Идемпотентность POST /orders")
+    Component(decisions, "orders/decisions", "Go", "Фоновая часть домена: тикер reconciler'а, захват и продление лизов заказов, ретраи вебхука с backoff, применение решения и возврат либо обнуление остатка")
+
+    Component(repo, "orders/infra/postgres", "Go, pgx", "Репозиторий заказов и операции с остатком. Только примитивы, без бизнес-решений")
+    Component(stream, "orders/infra/redis", "Go, go-redis", "Стрим событий заказа и хранилище ключей идемпотентности")
+    Component(webhook, "orders/infra/webhook", "Go, net/http", "Исходящий HTTP к заведению, разбор решения")
+
+    Component(places, "places/service", "Go", "Заведения и меню. Аутентификация по API-ключу для B2B")
+}
+
+ContainerDb(pg, "PostgreSQL", "Postgres")
+ContainerDb(redis, "Redis", "Redis 7")
+
+Rel(user, transport, "Запросы, в том числе открытие SSE-соединения", "HTTPS")
+Rel_U(transport, user, "Пушит смены статуса заказа", "SSE")
+Rel(transport, service, "Вызывает операции домена")
+Rel(transport, places, "Проверяет API-ключ для B2B /delivered")
+
+Rel(service, decisions, "Notify: толкает свежий заказ в обработку, не дожидаясь тика.\nИнтерфейс объявлен в service, реализацию подставляет сборка —\nпакеты друг друга не импортируют", "in-process, буферизованный канал")
+
+Rel(service, repo, "Резерв остатка, вставка заказа")
+Rel(service, stream, "Публикует pending, читает стрим для SSE,\nдержит локи идемпотентности")
+Rel(decisions, repo, "Захват и продление лизов,\nсмена статуса, возврат и обнуление остатка")
+Rel(decisions, stream, "Публикует смену статуса")
+Rel(decisions, webhook, "Спрашивает решение")
+
+Rel(webhook, place, "POST на webhook_url", "HTTPS")
+Rel(repo, pg, "SQL в транзакции", "pgx")
+Rel(stream, redis, "XADD / XREAD / SETNX", "go-redis")
+
+SHOW_LEGEND()
+@enduml

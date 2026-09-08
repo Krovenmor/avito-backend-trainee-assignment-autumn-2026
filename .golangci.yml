@@ -1,0 +1,30 @@
+version: "2"
+
+run:
+  timeout: 5m
+
+linters:
+  enable:
+    - govet
+    - errcheck
+    - staticcheck
+    - unused
+    - ineffassign
+    - bodyclose
+    - noctx
+    - gosec
+
+  settings:
+    gosec:
+      excludes:
+        - G101 # имена заголовков вида X-API-Key принимает за захардкоженный секрет
+        - G304 # путь к файлу приходит из конфигурации, это и есть его назначение
+        - G404 # math/rand достаточно для имитации офлайн-продаж в testapi
+
+  exclusions:
+    rules:
+      - path: ^tests/
+        linters:
+          - errcheck
+          - noctx
+          - gosec

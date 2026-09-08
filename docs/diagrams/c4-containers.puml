@@ -1,0 +1,28 @@
+@startuml c4-containers
+!include <C4/C4_Container>
+
+title C4 Level 2 — контейнеры
+
+Person(user, "Пользователь", "Оформляет заказы, слушает статусы")
+
+System_Boundary(platform, "Авито.Кухня") {
+    Container(kitchen, "kitchen", "Go 1.26, fx", "Модульный монолит: домены orders и places. B2C API, B2B API, SSE, исходящий вебхук, reconciler заказов")
+    ContainerDb(pg, "PostgreSQL", "Postgres", "Заведения, товары с остатками, заказы и позиции. Состояние платформы и точка атомарности: резерв остатка коммитится вместе с заказом. Остаток здесь — то, что сообщило заведение, а не то, что у него на полке")
+    ContainerDb(redis, "Redis", "Redis 7", "Стрим событий заказа для SSE (XADD/XREAD, TTL 24 ч) и SETNX-локи идемпотентности POST /orders")
+}
+
+System_Boundary(partner, "Демо-партнёр") {
+    Container(testapi, "testapi", "Go 1.26, fx", "Эмулятор заведения: сам регистрируется и заливает меню, обслуживает вебхук, имитирует продажи мимо платформы и пополнение запасов, сообщает о ходе готовки и подтверждает доставку")
+}
+
+Rel(user, kitchen, "Меню и поиск, заказы, отмена, оценка", "HTTPS/JSON")
+Rel_R(kitchen, user, "Пушит смены статуса в открытое клиентом соединение", "SSE")
+
+Rel(kitchen, pg, "Читает и пишет, транзакции через go-transaction-manager", "pgx")
+Rel(kitchen, redis, "Публикует и читает события, держит локи идемпотентности", "go-redis")
+
+Rel(testapi, kitchen, "Регистрация, меню, пополнение остатка,\nстатусы готовки, delivered", "HTTPS/JSON + X-API-Key")
+Rel_L(kitchen, testapi, "Запрос решения по заказу, ретраи с backoff", "HTTPS, вебхук")
+
+SHOW_LEGEND()
+@enduml

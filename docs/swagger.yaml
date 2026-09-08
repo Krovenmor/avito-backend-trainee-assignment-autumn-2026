@@ -1,0 +1,1062 @@
+basePath: /
+definitions:
+  avito-kitchen_services_kitchen_internal_httpx.ErrorResponse:
+    properties:
+      error:
+        type: string
+    type: object
+  services_kitchen_internal_orders_transport_http.addTrackingRequest:
+    properties:
+      external_code:
+        maxLength: 64
+        type: string
+      occurred_at:
+        type: string
+      status:
+        enum:
+        - accepted
+        - cooking
+        - ready
+        - handed_over
+        type: string
+    required:
+    - external_code
+    - occurred_at
+    - status
+    type: object
+  services_kitchen_internal_orders_transport_http.cancelOrderRequest:
+    properties:
+      user_id:
+        type: string
+    required:
+    - user_id
+    type: object
+  services_kitchen_internal_orders_transport_http.createOrderItemRequest:
+    properties:
+      product_id:
+        type: string
+      quantity:
+        maximum: 1000
+        type: integer
+    required:
+    - product_id
+    - quantity
+    type: object
+  services_kitchen_internal_orders_transport_http.createOrderRequest:
+    properties:
+      items:
+        items:
+          $ref: '#/definitions/services_kitchen_internal_orders_transport_http.createOrderItemRequest'
+        maxItems: 100
+        minItems: 1
+        type: array
+      place_id:
+        type: string
+      user_id:
+        type: string
+    required:
+    - items
+    - place_id
+    - user_id
+    type: object
+  services_kitchen_internal_orders_transport_http.createOrderResponse:
+    properties:
+      order_id:
+        type: string
+      status:
+        type: string
+    type: object
+  services_kitchen_internal_orders_transport_http.orderEventResponse:
+    properties:
+      order_id:
+        type: string
+      source:
+        type: string
+      status:
+        type: string
+    type: object
+  services_kitchen_internal_orders_transport_http.orderItemResponse:
+    properties:
+      external_id:
+        type: string
+      name:
+        type: string
+      price:
+        type: string
+      product_id:
+        type: string
+      quantity:
+        type: integer
+    type: object
+  services_kitchen_internal_orders_transport_http.orderListItemResponse:
+    properties:
+      created_at:
+        type: string
+      order_id:
+        type: string
+      place_id:
+        type: string
+      place_name:
+        type: string
+      status:
+        type: string
+      total_amount:
+        type: string
+    type: object
+  services_kitchen_internal_orders_transport_http.orderResponse:
+    properties:
+      created_at:
+        type: string
+      items:
+        items:
+          $ref: '#/definitions/services_kitchen_internal_orders_transport_http.orderItemResponse'
+        type: array
+      order_id:
+        type: string
+      place_id:
+        type: string
+      place_name:
+        type: string
+      status:
+        type: string
+      total_amount:
+        type: string
+    type: object
+  services_kitchen_internal_orders_transport_http.outOfStockResponse:
+    properties:
+      error:
+        type: string
+      items:
+        items:
+          $ref: '#/definitions/services_kitchen_internal_orders_transport_http.unavailableItemResponse'
+        type: array
+    type: object
+  services_kitchen_internal_orders_transport_http.rateOrderRequest:
+    properties:
+      score:
+        maximum: 5
+        minimum: 1
+        type: integer
+      user_id:
+        type: string
+    required:
+    - score
+    - user_id
+    type: object
+  services_kitchen_internal_orders_transport_http.trackingEventResponse:
+    properties:
+      external_code:
+        type: string
+      occurred_at:
+        type: string
+      source:
+        type: string
+      status:
+        type: string
+    type: object
+  services_kitchen_internal_orders_transport_http.unavailableItemResponse:
+    properties:
+      available:
+        type: integer
+      product_id:
+        type: string
+      requested:
+        type: integer
+    type: object
+  services_kitchen_internal_places_transport_http.menuItemRequest:
+    properties:
+      description:
+        maxLength: 2000
+        type: string
+      external_id:
+        maxLength: 200
+        type: string
+      name:
+        maxLength: 200
+        type: string
+      price:
+        type: string
+      stock_quantity:
+        minimum: 0
+        type: integer
+    required:
+    - external_id
+    - name
+    - price
+    type: object
+  services_kitchen_internal_places_transport_http.menuItemResponse:
+    properties:
+      external_id:
+        type: string
+    type: object
+  services_kitchen_internal_places_transport_http.placeListItemResponse:
+    properties:
+      address:
+        type: string
+      city:
+        type: string
+      closes_at:
+        type: string
+      description:
+        type: string
+      id:
+        type: string
+      is_open:
+        type: boolean
+      name:
+        type: string
+      opens_at:
+        type: string
+      rating:
+        type: string
+      rating_count:
+        type: integer
+      timezone:
+        type: string
+      type:
+        type: string
+    type: object
+  services_kitchen_internal_places_transport_http.productListItemResponse:
+    properties:
+      description:
+        type: string
+      name:
+        type: string
+      price:
+        type: string
+      product_id:
+        type: string
+      stock_quantity:
+        type: integer
+    type: object
+  services_kitchen_internal_places_transport_http.productPlaceResponse:
+    properties:
+      city:
+        type: string
+      is_open:
+        type: boolean
+      name:
+        type: string
+      place_id:
+        type: string
+      type:
+        type: string
+    type: object
+  services_kitchen_internal_places_transport_http.productSearchItemResponse:
+    properties:
+      description:
+        type: string
+      name:
+        type: string
+      place:
+        $ref: '#/definitions/services_kitchen_internal_places_transport_http.productPlaceResponse'
+      price:
+        type: string
+      product_id:
+        type: string
+      stock_quantity:
+        type: integer
+    type: object
+  services_kitchen_internal_places_transport_http.registerPlaceRequest:
+    properties:
+      address:
+        maxLength: 300
+        type: string
+      city:
+        maxLength: 100
+        type: string
+      closes_at:
+        type: string
+      description:
+        maxLength: 2000
+        type: string
+      name:
+        maxLength: 200
+        type: string
+      opens_at:
+        type: string
+      timezone:
+        type: string
+      type:
+        enum:
+        - restaurant
+        - cafe
+        - shop
+        type: string
+      webhook_url:
+        type: string
+    required:
+    - address
+    - city
+    - closes_at
+    - name
+    - opens_at
+    - timezone
+    - type
+    - webhook_url
+    type: object
+  services_kitchen_internal_places_transport_http.registerPlaceResponse:
+    properties:
+      api_key:
+        type: string
+      place_id:
+        type: string
+    type: object
+  services_kitchen_internal_places_transport_http.updateMenuItemRequest:
+    properties:
+      description:
+        maxLength: 2000
+        type: string
+      name:
+        maxLength: 200
+        type: string
+      price:
+        type: string
+      reason:
+        maxLength: 500
+        type: string
+      stock_delta:
+        type: integer
+    type: object
+  services_kitchen_internal_places_transport_http.updatePlaceRequest:
+    properties:
+      address:
+        maxLength: 300
+        type: string
+      city:
+        maxLength: 100
+        type: string
+      closes_at:
+        type: string
+      description:
+        maxLength: 2000
+        type: string
+      is_active:
+        type: boolean
+      name:
+        maxLength: 200
+        type: string
+      opens_at:
+        type: string
+      timezone:
+        type: string
+      type:
+        enum:
+        - restaurant
+        - cafe
+        - shop
+        type: string
+      webhook_url:
+        type: string
+    type: object
+info:
+  contact: {}
+  description: MVP платформы «Авито.Кухня».
+  title: Avito Kitchen API
+  version: 0.1.0
+paths:
+  /api/v1/b2b/orders/{id}/delivered:
+    post:
+      description: Moves an ACCEPTED order to COMPLETED. Idempotent for an order that
+        is already COMPLETED.
+      parameters:
+      - description: Order ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/avito-kitchen_services_kitchen_internal_httpx.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/avito-kitchen_services_kitchen_internal_httpx.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/avito-kitchen_services_kitchen_internal_httpx.ErrorResponse'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/avito-kitchen_services_kitchen_internal_httpx.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Mark an order as delivered
+      tags:
+      - b2b/orders
+  /api/v1/b2b/orders/{id}/tracking:
+    post:
+      consumes:
+      - application/json
+      description: 'The place reports its own progress on an accepted order. These
+        statuses belong to the place, not to the platform: they are stored as history
+        and forwarded to the user''s SSE stream, but they never change order_status.'
+      parameters:
+      - description: Order ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Tracking event
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/services_kitchen_internal_orders_transport_http.addTrackingRequest'
+      produces:
+      - application/json
+      responses:
+        "202":
+          description: Accepted
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/avito-kitchen_services_kitchen_internal_httpx.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/avito-kitchen_services_kitchen_internal_httpx.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/avito-kitchen_services_kitchen_internal_httpx.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Report an order tracking event
+      tags:
+      - b2b/orders
+  /api/v1/b2b/places:
+    post:
+      consumes:
+      - application/json
+      description: Registers a new place. Returns the place_id and a one-time api_key.
+      parameters:
+      - description: Place registration data
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/services_kitchen_internal_places_transport_http.registerPlaceRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/services_kitchen_internal_places_transport_http.registerPlaceResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/avito-kitchen_services_kitchen_internal_httpx.ErrorResponse'
+      summary: Register a place
+      tags:
+      - b2b/places
+  /api/v1/b2b/places/{id}:
+    patch:
+      consumes:
+      - application/json
+      description: Partially updates a place's fields; only fields present in the
+        body are changed.
+      parameters:
+      - description: Place ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Fields to update
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/services_kitchen_internal_places_transport_http.updatePlaceRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/avito-kitchen_services_kitchen_internal_httpx.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/avito-kitchen_services_kitchen_internal_httpx.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/avito-kitchen_services_kitchen_internal_httpx.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/avito-kitchen_services_kitchen_internal_httpx.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Update a place
+      tags:
+      - b2b/places
+  /api/v1/b2b/places/{id}/menu:
+    post:
+      consumes:
+      - application/json
+      description: Adds one or more products to a place's menu, always as an array.
+        Returns the external_id to product_id mapping.
+      parameters:
+      - description: Place ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Menu items to add
+        in: body
+        name: request
+        required: true
+        schema:
+          items:
+            $ref: '#/definitions/services_kitchen_internal_places_transport_http.menuItemRequest'
+          type: array
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            items:
+              $ref: '#/definitions/services_kitchen_internal_places_transport_http.menuItemResponse'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/avito-kitchen_services_kitchen_internal_httpx.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/avito-kitchen_services_kitchen_internal_httpx.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/avito-kitchen_services_kitchen_internal_httpx.ErrorResponse'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/avito-kitchen_services_kitchen_internal_httpx.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Add menu items
+      tags:
+      - b2b/places
+  /api/v1/b2b/places/{id}/menu/{external_id}:
+    delete:
+      description: Soft-deletes a product from the menu; idempotent.
+      parameters:
+      - description: Place ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Product external ID
+        in: path
+        name: external_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/avito-kitchen_services_kitchen_internal_httpx.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/avito-kitchen_services_kitchen_internal_httpx.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/avito-kitchen_services_kitchen_internal_httpx.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Delete a menu item
+      tags:
+      - b2b/places
+    patch:
+      consumes:
+      - application/json
+      description: Overwrites name/description/price as given and applies stock_delta
+        atomically to the current stock; reason is required when stock_delta is negative.
+      parameters:
+      - description: Place ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Product external ID
+        in: path
+        name: external_id
+        required: true
+        type: string
+      - description: Fields to update
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/services_kitchen_internal_places_transport_http.updateMenuItemRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/avito-kitchen_services_kitchen_internal_httpx.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/avito-kitchen_services_kitchen_internal_httpx.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/avito-kitchen_services_kitchen_internal_httpx.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/avito-kitchen_services_kitchen_internal_httpx.ErrorResponse'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/avito-kitchen_services_kitchen_internal_httpx.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Update a menu item
+      tags:
+      - b2b/places
+  /api/v1/orders:
+    post:
+      consumes:
+      - application/json
+      description: Reserves stock and creates a PENDING order. Requires an Idempotency-Key
+        header.
+      parameters:
+      - description: Idempotency key (UUID)
+        in: header
+        name: Idempotency-Key
+        required: true
+        type: string
+      - description: Order to create
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/services_kitchen_internal_orders_transport_http.createOrderRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/services_kitchen_internal_orders_transport_http.createOrderResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/avito-kitchen_services_kitchen_internal_httpx.ErrorResponse'
+        "409":
+          description: Заведение закрыто, либо не хватает остатка — тогда в items
+            перечислены проблемные позиции
+          schema:
+            $ref: '#/definitions/services_kitchen_internal_orders_transport_http.outOfStockResponse'
+        "422":
+          description: Unprocessable Entity
+          schema:
+            $ref: '#/definitions/avito-kitchen_services_kitchen_internal_httpx.ErrorResponse'
+      summary: Create an order
+      tags:
+      - orders
+  /api/v1/orders/{id}:
+    get:
+      description: The order with its items and the place name — everything an order
+        page needs. user_id must match the owner, otherwise the order is reported
+        as not found.
+      parameters:
+      - description: Order ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Owner of the order
+        in: query
+        name: user_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/services_kitchen_internal_orders_transport_http.orderResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/avito-kitchen_services_kitchen_internal_httpx.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/avito-kitchen_services_kitchen_internal_httpx.ErrorResponse'
+      summary: Get one order
+      tags:
+      - orders
+  /api/v1/orders/{id}/cancel:
+    post:
+      consumes:
+      - application/json
+      description: 'Cancels a PENDING order and returns the reserved stock. The place
+        is not notified: if it accepts the order at the same moment, the platform
+        records the cancellation and the place does not learn about it.'
+      parameters:
+      - description: Order ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Owner of the order
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/services_kitchen_internal_orders_transport_http.cancelOrderRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/avito-kitchen_services_kitchen_internal_httpx.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/avito-kitchen_services_kitchen_internal_httpx.ErrorResponse'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/avito-kitchen_services_kitchen_internal_httpx.ErrorResponse'
+      summary: Cancel an order
+      tags:
+      - orders
+  /api/v1/orders/{id}/rate:
+    post:
+      consumes:
+      - application/json
+      description: Rates a COMPLETED order the user owns, once. The place rating is
+        the average of such ratings, so only someone who actually received an order
+        can affect it.
+      parameters:
+      - description: Order ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Owner of the order and the score from 1 to 5
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/services_kitchen_internal_orders_transport_http.rateOrderRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/avito-kitchen_services_kitchen_internal_httpx.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/avito-kitchen_services_kitchen_internal_httpx.ErrorResponse'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/avito-kitchen_services_kitchen_internal_httpx.ErrorResponse'
+      summary: Rate a delivered order
+      tags:
+      - orders
+  /api/v1/orders/{id}/stream:
+    get:
+      description: Server-sent events with the order status history and live updates.
+      parameters:
+      - description: Order ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Owner of the order
+        in: query
+        name: user_id
+        required: true
+        type: string
+      produces:
+      - text/event-stream
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/services_kitchen_internal_orders_transport_http.orderEventResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/avito-kitchen_services_kitchen_internal_httpx.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/avito-kitchen_services_kitchen_internal_httpx.ErrorResponse'
+      summary: Stream order status
+      tags:
+      - orders
+  /api/v1/orders/{id}/tracking:
+    get:
+      description: Statuses reported by the place and, later, by delivery. These never
+        change order_status; they are the observable track next to it. The SSE stream
+        carries the same events live, this endpoint replays them.
+      parameters:
+      - description: Order ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Owner of the order
+        in: query
+        name: user_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/services_kitchen_internal_orders_transport_http.trackingEventResponse'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/avito-kitchen_services_kitchen_internal_httpx.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/avito-kitchen_services_kitchen_internal_httpx.ErrorResponse'
+      summary: Order tracking history
+      tags:
+      - orders
+  /api/v1/places:
+    get:
+      description: Lists active places, optionally filtered by city, type and name
+        search, with pagination.
+      parameters:
+      - description: City filter
+        in: query
+        name: city
+        type: string
+      - description: Place type filter
+        enum:
+        - restaurant
+        - cafe
+        - shop
+        in: query
+        name: type
+        type: string
+      - description: Name search (ILIKE)
+        in: query
+        name: search
+        type: string
+      - description: Only places rated at least this high; unrated places are excluded
+        in: query
+        name: min_rating
+        type: number
+      - description: rating puts the best rated first; any other value keeps the default
+          order
+        enum:
+        - rating
+        in: query
+        name: sort
+        type: string
+      - description: Page size, default 20, max 100
+        in: query
+        name: limit
+        type: integer
+      - description: Offset, default 0
+        in: query
+        name: from
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/services_kitchen_internal_places_transport_http.placeListItemResponse'
+            type: array
+      summary: List places
+      tags:
+      - places
+  /api/v1/places/{id}:
+    get:
+      description: 'Everything a place page needs: address, working hours, whether
+        it is open right now and the rating.'
+      parameters:
+      - description: Place ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/services_kitchen_internal_places_transport_http.placeListItemResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/avito-kitchen_services_kitchen_internal_httpx.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/avito-kitchen_services_kitchen_internal_httpx.ErrorResponse'
+      summary: Get one place
+      tags:
+      - places
+  /api/v1/places/{id}/menu:
+    get:
+      description: Lists non-deleted products of a place with their stock_quantity,
+        optionally filtered by name search, with pagination.
+      parameters:
+      - description: Place ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Name search (ILIKE)
+        in: query
+        name: search
+        type: string
+      - description: Page size, default 20, max 100
+        in: query
+        name: limit
+        type: integer
+      - description: Offset, default 0
+        in: query
+        name: from
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/services_kitchen_internal_places_transport_http.productListItemResponse'
+            type: array
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/avito-kitchen_services_kitchen_internal_httpx.ErrorResponse'
+      summary: List a place's menu
+      tags:
+      - places
+  /api/v1/products:
+    get:
+      description: Finds dishes by name across every active place, so a user can start
+        from what they want to eat rather than from a place. Each item carries the
+        place it belongs to.
+      parameters:
+      - description: Dish name search (ILIKE)
+        in: query
+        name: search
+        type: string
+      - description: City filter
+        in: query
+        name: city
+        type: string
+      - description: Place type filter
+        enum:
+        - restaurant
+        - cafe
+        - shop
+        in: query
+        name: type
+        type: string
+      - description: Page size, default 20, max 100
+        in: query
+        name: limit
+        type: integer
+      - description: Offset, default 0
+        in: query
+        name: from
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/services_kitchen_internal_places_transport_http.productSearchItemResponse'
+            type: array
+      summary: Search dishes across places
+      tags:
+      - places
+  /api/v1/users/{user_id}/orders:
+    get:
+      description: Order history for a user, newest first.
+      parameters:
+      - description: User ID
+        in: path
+        name: user_id
+        required: true
+        type: string
+      - description: Page size, default 20, max 100
+        in: query
+        name: limit
+        type: integer
+      - description: Offset, default 0
+        in: query
+        name: from
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/services_kitchen_internal_orders_transport_http.orderListItemResponse'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/avito-kitchen_services_kitchen_internal_httpx.ErrorResponse'
+      summary: List a user's orders
+      tags:
+      - orders
+securityDefinitions:
+  ApiKeyAuth:
+    in: header
+    name: X-API-Key
+    type: apiKey
+swagger: "2.0"

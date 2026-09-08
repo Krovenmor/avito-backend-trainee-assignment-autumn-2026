@@ -1,0 +1,71 @@
+name: avito-kitchen
+
+services:
+  kitchen-db:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_USER: kitchen_user
+      POSTGRES_PASSWORD: kitchen_pass
+      POSTGRES_DB: kitchen_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U kitchen_user -d kitchen_db"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  kitchen-redis:
+    image: redis:7-alpine
+    command: redis-server --appendonly yes
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  kitchen:
+    build:
+      context: ..
+      dockerfile: services/kitchen/Dockerfile
+    env_file:
+      - ../config/kitchen.env
+    ports:
+      - "8080:8080"
+    depends_on:
+      kitchen-db:
+        condition: service_healthy
+      kitchen-redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "-", "http://localhost:8080/readyz"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  testapi:
+    build:
+      context: ..
+      dockerfile: services/testapi/Dockerfile
+    env_file:
+      - ../config/testapi.env
+    ports:
+      - "8081:8081"
+    depends_on:
+      kitchen:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "-", "http://localhost:8081/healthz"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+volumes:
+  postgres_db_data:
+  redis_data:
