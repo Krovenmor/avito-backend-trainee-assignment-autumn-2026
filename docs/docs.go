@@ -349,6 +349,12 @@ const docTemplate = `{
                     "200": {
                         "description": "OK"
                     },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/avito-kitchen_services_kitchen_internal_httpx.ErrorResponse"
+                        }
+                    },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
@@ -492,8 +498,14 @@ const docTemplate = `{
                             "$ref": "#/definitions/avito-kitchen_services_kitchen_internal_httpx.ErrorResponse"
                         }
                     },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/avito-kitchen_services_kitchen_internal_httpx.ErrorResponse"
+                        }
+                    },
                     "409": {
-                        "description": "Заведение закрыто, либо не хватает остатка — тогда в items перечислены проблемные позиции",
+                        "description": "Заведение закрыто, запрос с этим Idempotency-Key ещё выполняется, либо не хватает остатка — тогда в items перечислены проблемные позиции",
                         "schema": {
                             "$ref": "#/definitions/services_kitchen_internal_orders_transport_http.outOfStockResponse"
                         }
@@ -927,6 +939,12 @@ const docTemplate = `{
                             "items": {
                                 "$ref": "#/definitions/services_kitchen_internal_places_transport_http.productListItemResponse"
                             }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/avito-kitchen_services_kitchen_internal_httpx.ErrorResponse"
                         }
                     },
                     "404": {

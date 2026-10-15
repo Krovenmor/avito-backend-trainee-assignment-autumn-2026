@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"io"
+	"math"
 	"net/http"
 	"strconv"
 	"strings"
@@ -25,6 +26,7 @@ const (
 
 	decimalBase = 10
 	int32Bits   = 32
+	float64Bits = 64
 )
 
 func NormalizeUUID(value string) string {
@@ -55,6 +57,15 @@ func OptionalQueryParam(r *http.Request, key string) *string {
 	if v == "" {
 		return nil
 	}
+	return &v
+}
+
+func OptionalNumberQueryParam(r *http.Request, key string) *string {
+	n, err := strconv.ParseFloat(r.URL.Query().Get(key), float64Bits)
+	if err != nil || math.IsNaN(n) || math.IsInf(n, 0) {
+		return nil
+	}
+	v := strconv.FormatFloat(n, 'f', -1, float64Bits)
 	return &v
 }
 

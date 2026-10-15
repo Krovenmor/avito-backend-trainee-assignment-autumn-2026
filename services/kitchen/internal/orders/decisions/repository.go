@@ -11,6 +11,7 @@ type Repository interface {
 	RenewOrderLeases(ctx context.Context, owner string, orderIDs []string) error
 
 	GetOrder(ctx context.Context, orderID string) (*domain.Order, error)
+	GetOrderOwner(ctx context.Context, orderID string) (*domain.OrderOwner, error)
 	UpdatePendingOrderStatus(ctx context.Context, orderID string, status domain.OrderStatus) (bool, error)
 
 	ReturnStock(ctx context.Context, orderID string, exceptExternalIDs []string) error

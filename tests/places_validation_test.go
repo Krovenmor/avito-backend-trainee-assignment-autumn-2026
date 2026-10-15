@@ -84,3 +84,13 @@ func TestListPlaces_OutOfRangePagination(t *testing.T) {
 		doJSON(t, httpClient, http.MethodGet, baseURL+"/api/v1/places"+query, "", nil, http.StatusOK, nil)
 	}
 }
+
+func TestListPlaces_InvalidMinRatingIsIgnored(t *testing.T) {
+	if testing.Short() {
+		t.Skip("requires docker")
+	}
+
+	for _, query := range []string{"?min_rating=abc", "?min_rating=0x1p-2", "?min_rating=NaN", "?min_rating=Inf"} {
+		doJSON(t, httpClient, http.MethodGet, baseURL+"/api/v1/places"+query, "", nil, http.StatusOK, nil)
+	}
+}

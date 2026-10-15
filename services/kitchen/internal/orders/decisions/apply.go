@@ -36,10 +36,32 @@ func (p *Processor) requestDecision(order domain.PendingOrder) {
 			return
 		}
 
+		if !p.stillPending(ctx, order.ID) {
+			return
+		}
+
 		if delay < maxRetryDelay {
 			delay *= 2
 		}
 	}
+}
+
+func (p *Processor) stillPending(ctx context.Context, orderID string) bool {
+	owner, err := p.repo.GetOrderOwner(ctx, orderID)
+	if err != nil {
+		if ctx.Err() == nil {
+			p.log.Warn("check order status before calling the place again",
+				zap.String("order_id", orderID), zap.Error(err))
+		}
+		return true
+	}
+	if owner.Status == domain.StatusPending {
+		return true
+	}
+
+	p.log.Debug("order is no longer pending, stopped calling the place",
+		zap.String("order_id", orderID), zap.String("status", string(owner.Status)))
+	return false
 }
 
 func (p *Processor) applyDecision(ctx context.Context, order domain.PendingOrder, decision domain.Decision) {

@@ -1,5 +1,5 @@
 @startuml db-schema
-title Схема БД — Авито.Кухня
+title Схема БД
 
 hide circle
 skinparam linetype ortho
@@ -10,11 +10,48 @@ entity users {
   --
   * created_at : timestamptz
 }
-note bottom of users
-  Заглушка вместо аутентификации:
-  id генерирует клиент, строка заводится
-  upsert'ом при первом заказе
-end note
+
+entity orders {
+  * **id** : uuid <<PK>>
+  --
+  * **user_id** : uuid <<FK>>
+  * **place_id** : uuid <<FK>>
+  * order_status : text
+  * total_amount : numeric(12,2)
+  locked_by : text
+  locked_at : timestamptz
+  * created_at : timestamptz
+  * updated_at : timestamptz
+  ..
+  check (total_amount >= 0)
+  check (order_status in ('pending', 'accepted', 'rejected', 'completed', 'cancelled', 'expired'))
+}
+
+entity order_tracking {
+  * **id** : uuid <<PK>>
+  --
+  * **order_id** : uuid <<FK>>
+  * source : text
+  * external_code : text
+  * status : text
+  * occurred_at : timestamptz
+  * received_at : timestamptz
+  ..
+  check (source in ('place', 'delivery'))
+  check (status in ('accepted', 'cooking', 'ready', 'handed_over'))
+}
+
+entity order_ratings {
+  * **id** : uuid <<PK>>
+  --
+  * **order_id** : uuid <<FK>> <<unique>>
+  * **place_id** : uuid <<FK>>
+  * **user_id** : uuid <<FK>>
+  * score : smallint
+  * created_at : timestamptz
+  ..
+  check (score between 1 and 5)
+}
 
 entity places {
   * **id** : uuid <<PK>>
@@ -32,11 +69,16 @@ entity places {
   * is_active : boolean
   * created_at : timestamptz
 }
-note bottom of places
-  Часы работы — местное время заведения,
-  сравнение идёт через now() AT TIME ZONE timezone.
-  Хранится только sha256 ключа
-end note
+
+entity place_ratings {
+  * **place_id** : uuid <<PK>>
+  --
+  * rating_sum : bigint
+  * rating_count : integer
+  ..
+  check (rating_sum >= 0)
+  check (rating_count >= 0)
+}
 
 entity products {
   * **id** : uuid <<PK>>
@@ -55,34 +97,6 @@ entity products {
   check (price >= 0)
   check (stock_quantity >= 0)
 }
-note bottom of products
-  external_id — артикул в системе заведения.
-  Весь B2B адресует товар по нему, B2C — по нашему id.
-  Удаление мягкое: на товар ссылаются order_items
-end note
-
-entity orders {
-  * **id** : uuid <<PK>>
-  --
-  * **user_id** : uuid <<FK>>
-  * **place_id** : uuid <<FK>>
-  * order_status : text
-  * total_amount : numeric(12,2)
-  locked_by : text
-  locked_at : timestamptz
-  * created_at : timestamptz
-  * updated_at : timestamptz
-  ..
-  check (total_amount >= 0)
-  check (order_status in ('pending','accepted','rejected',
-  'completed','cancelled','expired'))
-}
-note bottom of orders
-  order_status: pending, accepted, rejected,
-  completed, cancelled, expired.
-  locked_by / locked_at — лиз заказа за инстансом,
-  чтобы вебхук не ушёл дважды
-end note
 
 entity order_items {
   * **id** : uuid <<PK>>
@@ -95,79 +109,16 @@ entity order_items {
   check (quantity > 0)
   check (price >= 0)
 }
-note bottom of order_items
-  price фиксируется на момент заказа:
-  переоценка в меню не меняет
-  сумму уже оформленного заказа
-end note
 
-entity order_ratings {
-  * **id** : uuid <<PK>>
-  --
-  * **order_id** : uuid <<FK>> <<unique>>
-  * **place_id** : uuid <<FK>>
-  * **user_id** : uuid <<FK>>
-  * score : smallint
-  * created_at : timestamptz
-  ..
-  check (score between 1 and 5)
-}
-note bottom of order_ratings
-  Оценить можно только свой доставленный заказ,
-  и только один раз — unique по order_id.
-  Это и есть защита от накрутки: чтобы
-  проголосовать, надо реально купить
-end note
-
-entity place_ratings {
-  * **place_id** : uuid <<PK>>
-  --
-  * rating_sum : bigint
-  * rating_count : integer
-  ..
-  check (rating_sum >= 0)
-  check (rating_count >= 0)
-}
-note bottom of place_ratings
-  Инкрементальный агрегат: сумма и счётчик,
-  а не среднее — точная целочисленная
-  арифметика без дрейфа округления.
-  Обновляется в одной транзакции со вставкой оценки
-end note
-
-entity order_tracking {
-  * **id** : uuid <<PK>>
-  --
-  * **order_id** : uuid <<FK>>
-  * source : text
-  * external_code : text
-  * status : text
-  * occurred_at : timestamptz
-  * received_at : timestamptz
-  ..
-  check (source in ('place', 'delivery'))
-  check (status in ('accepted', 'cooking', 'ready', 'handed_over'))
-}
-note bottom of order_tracking
-  Статусы чужих систем: заведение готовит,
-  доставка везёт. Наблюдаемое состояние,
-  отдельно от управляющего order_status —
-  чужой словарь не должен заезжать
-  в наш автомат. external_code хранит
-  сырой код партнёра, status — наш
-  нормализованный. occurred_at принадлежит
-  партнёру, received_at — нам
-end note
-
-users ||--o{ orders
+users ||-d-o{ orders
+places ||-r-o| place_ratings
+places ||-d-o{ products
 places ||--o{ orders
-places ||--o{ products
-orders ||--|{ order_items
-products ||--o{ order_items
-orders ||--o| order_ratings
+orders ||-d-o{ order_tracking
+orders ||-d-o| order_ratings
 users ||--o{ order_ratings
 places ||--o{ order_ratings
-places ||--o| place_ratings
-orders ||--o{ order_tracking
+orders ||--|{ order_items
+products ||-d-o{ order_items
 
 @enduml

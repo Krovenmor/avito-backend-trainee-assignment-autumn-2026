@@ -3,6 +3,7 @@ package tests
 import (
 	"net/http"
 	"testing"
+	"time"
 
 	"github.com/google/uuid"
 )
@@ -61,6 +62,32 @@ func TestCancelOrder(t *testing.T) {
 			t.Fatalf("expected stock to stay 10 after a repeated cancel, got %d", stock)
 		}
 	})
+}
+
+func TestCancelOrder_StopsCallingThePlace(t *testing.T) {
+	if testing.Short() {
+		t.Skip("requires docker")
+	}
+
+	stub := failingWebhook(t)
+	place := registerPlaceWithWebhook(t, stub)
+	addTestMenuItems(t, place.PlaceID, place.APIKey, []map[string]any{
+		{"external_id": "sku-1", "name": "Margherita", "price": "10.00", "stock_quantity": 10},
+	})
+	menu := placeMenu(t, place.PlaceID)
+
+	userID := uuid.NewString()
+	order := createOrder(t, userID, place.PlaceID, []map[string]any{orderItem(menu[0].ProductID, 1)})
+	waitWebhookCalls(t, stub, 1)
+
+	doJSON(t, httpClient, http.MethodPost, baseURL+"/api/v1/orders/"+order.OrderID+"/cancel", "",
+		map[string]any{"user_id": userID}, http.StatusOK, nil)
+	calls := len(stub.calls())
+
+	time.Sleep(5 * time.Second)
+	if extra := len(stub.calls()) - calls; extra > 0 {
+		t.Fatalf("expected the place to stop receiving a cancelled order, got %d more webhook calls", extra)
+	}
 }
 
 func TestMarkDelivered(t *testing.T) {

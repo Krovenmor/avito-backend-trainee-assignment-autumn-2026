@@ -212,6 +212,7 @@ func (h *Handler) updateMenuItem(w http.ResponseWriter, r *http.Request) {
 // @Param id path string true "Place ID"
 // @Param external_id path string true "Product external ID"
 // @Success 200
+// @Failure 400 {object} httpx.ErrorResponse
 // @Failure 401 {object} httpx.ErrorResponse
 // @Failure 403 {object} httpx.ErrorResponse
 // @Failure 404 {object} httpx.ErrorResponse
@@ -265,6 +266,7 @@ func (h *Handler) listPlaces(w http.ResponseWriter, r *http.Request) {
 // @Param limit query int false "Page size, default 20, max 100"
 // @Param from query int false "Offset, default 0"
 // @Success 200 {array} productListItemResponse
+// @Failure 400 {object} httpx.ErrorResponse
 // @Failure 404 {object} httpx.ErrorResponse
 // @Router /api/v1/places/{id}/menu [get]
 func (h *Handler) listMenu(w http.ResponseWriter, r *http.Request) {

@@ -1,45 +1,45 @@
 @startuml c4-components-orders
 !include <C4/C4_Component>
 
-title C4 Level 3 — компоненты домена orders внутри kitchen
+title C4 Level 3 — компоненты домена orders
 
-Person(user, "Пользователь")
-System_Ext(place, "Заведение", "Вебхук партнёра")
+Person(user, "Пользователь", "Ищет еду, оформляет заказы и следит за их статусом")
+System_Ext(place, "Заведение", "Принимает заказы через вебхук")
 
 Container_Boundary(kitchen, "kitchen") {
 
-    Component(domain, "orders/domain", "Go", "Модели заказа, статусы и ошибки. Сам не зависит ни от чего; на него опираются все остальные компоненты домена, поэтому стрелки не рисуются")
+    Component(domain, "orders/domain", "Go", "Модели заказа, статусы и ошибки. Сам не зависит ни от чего, на него опираются все остальные компоненты домена")
 
-    Component(transport, "orders/transport/http", "Go", "Хендлеры /orders, /cancel, /rate, /stream, /tracking, /users/{id}/orders и B2B /delivered, /tracking. Валидация, коды ошибок, SSE")
-    Component(service, "orders/service", "Go", "Синхронная часть домена: создание с резервом остатка, отмена, delivered, история, подписка на события. Идемпотентность POST /orders")
-    Component(decisions, "orders/decisions", "Go", "Фоновая часть домена: тикер reconciler'а, захват и продление лизов заказов, ретраи вебхука с backoff, применение решения и возврат либо обнуление остатка")
+    Component(transport, "orders/transport/http", "Go", "Хендлеры заказов, валидация, коды ошибок, SSE")
+    Component(service, "orders/service", "Go", "Синхронная часть домена: создание с резервом остатка, отмена, доставка, оценка, приём статусов заведения, история, подписка на события")
+    Component(decisions, "orders/decisions", "Go", "Фоновая часть домена: проход по ждущим заказам (reconciler), захват и продление аренды заказов, повторы вебхука, применение решения, возврат и обнуление остатка")
 
     Component(repo, "orders/infra/postgres", "Go, pgx", "Репозиторий заказов и операции с остатком. Только примитивы, без бизнес-решений")
-    Component(stream, "orders/infra/redis", "Go, go-redis", "Стрим событий заказа и хранилище ключей идемпотентности")
-    Component(webhook, "orders/infra/webhook", "Go, net/http", "Исходящий HTTP к заведению, разбор решения")
+    Component(stream, "orders/infra/redis", "Go, go-redis", "Поток событий заказа и хранилище ключей идемпотентности")
+    Component(webhook, "orders/infra/webhook", "Go, net/http", "HTTP-клиент к заведению, разбор решения")
 
-    Component(places, "places/service", "Go", "Заведения и меню. Аутентификация по API-ключу для B2B")
+    Component(places, "places/service", "Go", "Заведения и меню. Проверка API-ключа для B2B")
 }
 
-ContainerDb(pg, "PostgreSQL", "Postgres")
+ContainerDb(pg, "PostgreSQL", "PostgreSQL 17")
 ContainerDb(redis, "Redis", "Redis 7")
 
-Rel(user, transport, "Запросы, в том числе открытие SSE-соединения", "HTTPS")
-Rel_U(transport, user, "Пушит смены статуса заказа", "SSE")
+Rel(user, transport, "Оформляет, отменяет и оценивает заказы,\nсмотрит историю", "HTTPS/JSON")
+Rel_U(transport, user, "Присылает статусы заказа", "SSE")
 Rel(transport, service, "Вызывает операции домена")
-Rel(transport, places, "Проверяет API-ключ для B2B /delivered")
+Rel(transport, places, "Проверяет API-ключ для B2B\n/delivered и /tracking")
 
-Rel(service, decisions, "Notify: толкает свежий заказ в обработку, не дожидаясь тика.\nИнтерфейс объявлен в service, реализацию подставляет сборка —\nпакеты друг друга не импортируют", "in-process, буферизованный канал")
+Rel(service, decisions, "Передаёт новый заказ через Notify,\nне дожидаясь фонового прохода.\nИнтерфейс объявлен в service", "in-process, буферизованный канал")
 
-Rel(service, repo, "Резерв остатка, вставка заказа")
-Rel(service, stream, "Публикует pending, читает стрим для SSE,\nдержит локи идемпотентности")
-Rel(decisions, repo, "Захват и продление лизов,\nсмена статуса, возврат и обнуление остатка")
+Rel(service, repo, "Резервирует остаток, записывает и отменяет заказы,\nотмечает доставку, пишет оценки и статусы заведения")
+Rel(service, stream, "Публикует события, читает поток для SSE,\nдержит ключи идемпотентности")
+Rel(decisions, repo, "Захватывает и продлевает аренду заказов,\nпроверяет статус перед повтором,\nменяет статус, возвращает и обнуляет остаток")
 Rel(decisions, stream, "Публикует смену статуса")
 Rel(decisions, webhook, "Спрашивает решение")
 
-Rel(webhook, place, "POST на webhook_url", "HTTPS")
-Rel(repo, pg, "SQL в транзакции", "pgx")
-Rel(stream, redis, "XADD / XREAD / SETNX", "go-redis")
+Rel(webhook, place, "Отправляет заказ на вебхук", "HTTPS")
+Rel(repo, pg, "Читает и пишет", "pgx")
+Rel(stream, redis, "Пишет и читает поток, ставит ключи", "XADD, XRANGE, XREAD, SET NX")
 
 SHOW_LEGEND()
 @enduml

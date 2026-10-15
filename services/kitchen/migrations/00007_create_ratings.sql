@@ -8,8 +8,6 @@ CREATE TABLE order_ratings (
     created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
-CREATE INDEX idx_order_ratings_place_id ON order_ratings (place_id, created_at DESC);
-
 CREATE TABLE place_ratings (
     place_id     UUID PRIMARY KEY REFERENCES places (id),
     rating_sum   BIGINT NOT NULL DEFAULT 0 CHECK (rating_sum >= 0),

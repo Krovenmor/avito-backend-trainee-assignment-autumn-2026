@@ -1,8 +1,11 @@
 package tests
 
 import (
+	"bytes"
+	"encoding/json"
 	"net/http"
 	"strings"
+	"sync"
 	"testing"
 
 	"github.com/google/uuid"
@@ -323,4 +326,102 @@ func TestCreateOrder_InactivePlace(t *testing.T) {
 		"place_id": place.PlaceID,
 		"items":    []map[string]any{orderItem(menu[0].ProductID, 1)},
 	}, http.StatusConflict, nil)
+}
+
+func TestCreateOrder_ConcurrentOrdersNeverOversell(t *testing.T) {
+	if testing.Short() {
+		t.Skip("requires docker")
+	}
+
+	const (
+		scarceStock = 3
+		plentyStock = 100
+		orders      = 20
+	)
+
+	stub := acceptingWebhook(t)
+	place := registerPlaceWithWebhook(t, stub)
+	addTestMenuItems(t, place.PlaceID, place.APIKey, []map[string]any{
+		{"external_id": "sku-1", "name": "Scarce", "price": "10.00", "stock_quantity": scarceStock},
+		{"external_id": "sku-2", "name": "Plenty", "price": "10.00", "stock_quantity": plentyStock},
+	})
+	scarce := menuItemByName(t, place.PlaceID, "Scarce")
+	plenty := menuItemByName(t, place.PlaceID, "Plenty")
+
+	start := make(chan struct{})
+	statuses := make(chan int, orders)
+	failures := make(chan error, orders)
+	var wg sync.WaitGroup
+	for i := range orders {
+		items := []map[string]any{orderItem(scarce.ProductID, 1), orderItem(plenty.ProductID, 1)}
+		if i%2 == 1 {
+			items[0], items[1] = items[1], items[0]
+		}
+		body, err := json.Marshal(map[string]any{
+			"user_id":  uuid.NewString(),
+			"place_id": place.PlaceID,
+			"items":    items,
+		})
+		if err != nil {
+			t.Fatalf("marshal order: %v", err)
+		}
+
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			<-start
+			status, err := postOrder(body)
+			if err != nil {
+				failures <- err
+				return
+			}
+			statuses <- status
+		}()
+	}
+	close(start)
+	wg.Wait()
+	close(statuses)
+	close(failures)
+
+	for err := range failures {
+		t.Fatalf("post order: %v", err)
+	}
+
+	created := 0
+	for status := range statuses {
+		switch status {
+		case http.StatusCreated:
+			created++
+		case http.StatusConflict:
+		default:
+			t.Fatalf("expected only 201 or 409 from concurrent orders, got %d", status)
+		}
+	}
+
+	if created != scarceStock {
+		t.Fatalf("expected exactly %d orders to get the scarce item, got %d", scarceStock, created)
+	}
+	if stock := productStock(t, place.PlaceID, scarce.ProductID); stock != 0 {
+		t.Fatalf("expected the scarce item to be sold out, got stock %d", stock)
+	}
+	if stock := productStock(t, place.PlaceID, plenty.ProductID); stock != plentyStock-scarceStock {
+		t.Fatalf("expected rejected orders to reserve nothing, got plenty stock %d", stock)
+	}
+}
+
+func postOrder(body []byte) (int, error) {
+	req, err := http.NewRequest(http.MethodPost, baseURL+"/api/v1/orders", bytes.NewReader(body))
+	if err != nil {
+		return 0, err
+	}
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Idempotency-Key", uuid.NewString())
+
+	resp, err := httpClient.Do(req)
+	if err != nil {
+		return 0, err
+	}
+	defer resp.Body.Close()
+
+	return resp.StatusCode, nil
 }

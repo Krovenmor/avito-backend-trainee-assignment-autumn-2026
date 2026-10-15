@@ -81,7 +81,7 @@ func toListPlacesParams(r *http.Request, limit, offset int32) domain.ListPlacesP
 		City:         httpx.OptionalQueryParam(r, queryParamCity),
 		Type:         httpx.OptionalQueryParam(r, queryParamType),
 		Search:       httpx.OptionalQueryParam(r, httpx.QueryParamSearch),
-		MinRating:    httpx.OptionalQueryParam(r, queryParamMinRating),
+		MinRating:    httpx.OptionalNumberQueryParam(r, queryParamMinRating),
 		SortByRating: r.URL.Query().Get(queryParamSort) == sortByRating,
 		Limit:        limit,
 		Offset:       offset,

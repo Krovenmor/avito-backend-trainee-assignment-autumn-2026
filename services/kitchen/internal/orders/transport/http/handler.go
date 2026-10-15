@@ -62,7 +62,8 @@ func (h *Handler) Register(mux *http.ServeMux) {
 // @Param request body createOrderRequest true "Order to create"
 // @Success 201 {object} createOrderResponse
 // @Failure 400 {object} httpx.ErrorResponse
-// @Failure 409 {object} outOfStockResponse "Заведение закрыто, либо не хватает остатка — тогда в items перечислены проблемные позиции"
+// @Failure 404 {object} httpx.ErrorResponse
+// @Failure 409 {object} outOfStockResponse "Заведение закрыто, запрос с этим Idempotency-Key ещё выполняется, либо не хватает остатка — тогда в items перечислены проблемные позиции"
 // @Failure 422 {object} httpx.ErrorResponse
 // @Router /api/v1/orders [post]
 func (h *Handler) createOrder(w http.ResponseWriter, r *http.Request) {
